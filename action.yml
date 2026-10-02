@@ -18,6 +18,9 @@ inputs:
   game-zip:
     description: Path to the built bundle.
     default: web/game.zip
+  site-dir:
+    description: For a `kind: static` game, the directory to upload as the whole site (it must hold index.html). index and game-zip are ignored when this is set.
+    default: ""
   version-file:
     description: Path to version.txt. Its contents are the version deployed.
     default: version.txt
@@ -50,6 +53,7 @@ runs:
         ARCADE_INDEX: ${{ inputs.index }}
         ARCADE_GAME_ZIP: ${{ inputs.game-zip }}
         ARCADE_VERSION_FILE: ${{ inputs.version-file }}
+        ARCADE_SITE_DIR: ${{ inputs.site-dir }}
         ARCADE_URL: ${{ inputs.url }}
         ARCADE_ACTIVATE: ${{ inputs.activate }}
         ARCADE_SKIP_EXISTING: ${{ inputs.skip-existing }}

@@ -33,6 +33,21 @@ Before the first deploy, the game needs an entry in the gateway's `games.yaml` w
 `token_sha256` of its token, and the token itself as the repository secret `ARCADE_TOKEN`. The
 arcade README explains how to mint both.
 
+## A static game (pygbag, Emscripten, plain HTML/JS)
+
+For a game registered with `kind: static`, upload a whole build directory:
+
+```yaml
+      - run: pip install pygbag && python -m pygbag --build src
+      - uses: Stephenson-Software/arcade-deploy@v1
+        with:
+          slug: rock-paper-scissors
+          token: ${{ secrets.ARCADE_TOKEN }}
+          site-dir: src/build/web
+```
+
+The action writes `version.txt` into the uploaded tree and dereferences links, which arcade refuses.
+
 ## Inputs
 
 | Input | Default | |
@@ -41,6 +56,7 @@ arcade README explains how to mint both.
 | `token` | (required) | the upload token; pass a secret |
 | `index` | `web/index.html` | the page |
 | `game-zip` | `web/game.zip` | the built bundle |
+| `site-dir` | (empty) | for a `kind: static` game, a directory uploaded as the whole site (must hold `index.html`); `index` and `game-zip` are then ignored |
 | `version-file` | `version.txt` | its contents are the version |
 | `url` | `https://play.danielstephenson.dev` | arcade's API base |
 | `activate` | `true` | `false` stores the version without making it live (promote later with arcade's `POST /api/games/<slug>/current`) |

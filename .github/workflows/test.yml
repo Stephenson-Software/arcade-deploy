@@ -25,10 +25,10 @@ jobs:
           python-version: '3.12'
       - name: Start arcade on play.localhost
         run: |
-          echo "127.0.0.1 play.localhost fixture.play.localhost" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 play.localhost fixture.play.localhost site.play.localhost" | sudo tee -a /etc/hosts
           mkdir -p "$RUNNER_TEMP/arcade-data"
           HASH=$(echo "$TEST_TOKEN" | PYTHONPATH=arcade-server/src python -m arcade hash-token)
-          printf 'games:\n  - slug: fixture\n    title: Fixture\n    repo: Stephenson-Software/arcade-deploy\n    token_sha256: "%s"\n' "$HASH" > "$RUNNER_TEMP/games.yaml"
+          printf 'games:\n  - slug: fixture\n    title: Fixture\n    repo: Stephenson-Software/arcade-deploy\n    token_sha256: "%s"\n  - slug: site\n    title: Site\n    repo: Stephenson-Software/arcade-deploy\n    token_sha256: "%s"\n    kind: static\n' "$HASH" "$HASH" > "$RUNNER_TEMP/games.yaml"
           ARCADE_DOMAIN=play.localhost ARCADE_DATA="$RUNNER_TEMP/arcade-data" \
             ARCADE_REGISTRY="$RUNNER_TEMP/games.yaml" ARCADE_HOST=127.0.0.1 ARCADE_PORT=8080 \
             PYTHONPATH=arcade-server/src nohup python -m arcade serve > "$RUNNER_TEMP/arcade.log" 2>&1 &
@@ -96,6 +96,27 @@ jobs:
           url: http://play.localhost:8080
           activate: "false"
       - run: curl -fsS http://fixture.play.localhost:8080/web/version.txt | grep -x 1.0.0
+
+      - name: Build a static site (any tree, as pygbag or Emscripten would emit)
+        run: |
+          mkdir -p site-build/pkg
+          echo '<html>static site</html>' > site-build/index.html
+          printf '\0asm' > site-build/pkg/game.wasm
+          echo 2.0.0 > site-version.txt
+      - name: Deploy a static site through the action
+        uses: ./
+        with:
+          slug: site
+          token: ${{ env.TEST_TOKEN }}
+          url: http://play.localhost:8080
+          site-dir: site-build
+          version-file: site-version.txt
+      - name: The site is served as files, without isolation headers
+        run: |
+          curl -fsS http://site.play.localhost:8080/ | grep 'static site'
+          test "$(curl -fsS -o /dev/null -w '%{content_type}' http://site.play.localhost:8080/pkg/game.wasm)" = application/wasm
+          ! curl -fsSI http://site.play.localhost:8080/ | grep -i '^cross-origin-embedder-policy'
+          curl -fsS http://site.play.localhost:8080/version.txt | grep -x 2.0.0
 
       - if: always()
         run: cat "$RUNNER_TEMP/arcade.log"

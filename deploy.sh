@@ -15,18 +15,33 @@ ARCADE_ACTIVATE=${ARCADE_ACTIVATE:-true}
 ARCADE_SKIP_EXISTING=${ARCADE_SKIP_EXISTING:-false}
 
 [[ "$ARCADE_SLUG" =~ ^[a-z][a-z0-9-]{1,30}$ ]] || fail "slug '$ARCADE_SLUG' is not a valid slug"
-for f in "$ARCADE_INDEX" "$ARCADE_GAME_ZIP" "$ARCADE_VERSION_FILE"; do
-  [ -f "$f" ] || fail "$f does not exist (did the build step run?)"
-done
+ARCADE_SITE_DIR=${ARCADE_SITE_DIR:-}
+if [ -n "$ARCADE_SITE_DIR" ]; then
+  [ -f "$ARCADE_SITE_DIR/index.html" ] || fail "$ARCADE_SITE_DIR/index.html does not exist (did the build step run?)"
+  [ -f "$ARCADE_VERSION_FILE" ] || fail "$ARCADE_VERSION_FILE does not exist"
+else
+  for f in "$ARCADE_INDEX" "$ARCADE_GAME_ZIP" "$ARCADE_VERSION_FILE"; do
+    [ -f "$f" ] || fail "$f does not exist (did the build step run?)"
+  done
+fi
 version=$(tr -d '[:space:]' < "$ARCADE_VERSION_FILE")
 [[ "$version" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]{0,63}$ ]] || fail "version '$version' from $ARCADE_VERSION_FILE is not a valid version"
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-cp "$ARCADE_INDEX" "$work/index.html"
-cp "$ARCADE_GAME_ZIP" "$work/game.zip"
-printf '%s\n' "$version" > "$work/version.txt"
-tar -C "$work" -cf "$work/bundle.tar" index.html game.zip version.txt
+if [ -n "$ARCADE_SITE_DIR" ]; then
+  # A static site: the whole directory, with version.txt written at its root.
+  mkdir "$work/site"
+  cp -R "$ARCADE_SITE_DIR"/. "$work/site/"
+  printf '%s\n' "$version" > "$work/site/version.txt"
+  # Links are refused by arcade; dereference them here rather than fail there.
+  tar -C "$work/site" --dereference -cf "$work/bundle.tar" .
+else
+  cp "$ARCADE_INDEX" "$work/index.html"
+  cp "$ARCADE_GAME_ZIP" "$work/game.zip"
+  printf '%s\n' "$version" > "$work/version.txt"
+  tar -C "$work" -cf "$work/bundle.tar" index.html game.zip version.txt
+fi
 
 # The token goes in a header file, not on the command line.
 umask 077
