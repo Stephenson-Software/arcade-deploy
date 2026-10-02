@@ -19,6 +19,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Stephenson-Software/arcade
+          # A released arcade, not its main branch: this test is about the
+          # action against a known server. Bump it with each arcade release.
+          ref: v0.3.1
           path: arcade-server
       - uses: actions/setup-python@v5
         with:
