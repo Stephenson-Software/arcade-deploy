@@ -1,0 +1,56 @@
+name: arcade-deploy
+description: Upload a game's browser bundle to arcade (Stephenson-Software RFC 0006) and make it live.
+author: Daniel McCoy Stephenson
+branding:
+  icon: upload-cloud
+  color: blue
+
+inputs:
+  slug:
+    description: The game's slug in the gateway's games.yaml.
+    required: true
+  token:
+    description: The game's upload token (pass a secret, e.g. secrets.ARCADE_TOKEN).
+    required: true
+  index:
+    description: Path to the game's page.
+    default: web/index.html
+  game-zip:
+    description: Path to the built bundle.
+    default: web/game.zip
+  version-file:
+    description: Path to version.txt. Its contents are the version deployed.
+    default: version.txt
+  url:
+    description: The arcade's API base.
+    default: https://play.danielstephenson.dev
+  activate:
+    description: Make the upload the live version ("true") or only store it ("false").
+    default: "true"
+  skip-existing:
+    description: Treat "this version is already deployed" (409) as success, for re-run jobs.
+    default: "false"
+
+outputs:
+  version:
+    description: The version uploaded.
+    value: ${{ steps.deploy.outputs.version }}
+  url:
+    description: Where the game is served.
+    value: ${{ steps.deploy.outputs.url }}
+
+runs:
+  using: composite
+  steps:
+    - id: deploy
+      shell: bash
+      env:
+        ARCADE_SLUG: ${{ inputs.slug }}
+        ARCADE_TOKEN: ${{ inputs.token }}
+        ARCADE_INDEX: ${{ inputs.index }}
+        ARCADE_GAME_ZIP: ${{ inputs.game-zip }}
+        ARCADE_VERSION_FILE: ${{ inputs.version-file }}
+        ARCADE_URL: ${{ inputs.url }}
+        ARCADE_ACTIVATE: ${{ inputs.activate }}
+        ARCADE_SKIP_EXISTING: ${{ inputs.skip-existing }}
+      run: "$GITHUB_ACTION_PATH/deploy.sh"

@@ -1,0 +1,101 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-to-a-real-arcade:
+    runs-on: ubuntu-latest
+    env:
+      TEST_TOKEN: ci-test-token-not-a-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Stephenson-Software/arcade
+          path: arcade-server
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Start arcade on play.localhost
+        run: |
+          echo "127.0.0.1 play.localhost fixture.play.localhost" | sudo tee -a /etc/hosts
+          mkdir -p "$RUNNER_TEMP/arcade-data"
+          HASH=$(echo "$TEST_TOKEN" | PYTHONPATH=arcade-server/src python -m arcade hash-token)
+          printf 'games:\n  - slug: fixture\n    title: Fixture\n    repo: Stephenson-Software/arcade-deploy\n    token_sha256: "%s"\n' "$HASH" > "$RUNNER_TEMP/games.yaml"
+          ARCADE_DOMAIN=play.localhost ARCADE_DATA="$RUNNER_TEMP/arcade-data" \
+            ARCADE_REGISTRY="$RUNNER_TEMP/games.yaml" ARCADE_HOST=127.0.0.1 ARCADE_PORT=8080 \
+            PYTHONPATH=arcade-server/src nohup python -m arcade serve > "$RUNNER_TEMP/arcade.log" 2>&1 &
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8080/healthz && break; sleep 1; done
+      - run: python test/make_bundle.py 1.0.0
+
+      - name: Deploy through the action
+        id: first
+        uses: ./
+        with:
+          slug: fixture
+          token: ${{ env.TEST_TOKEN }}
+          url: http://play.localhost:8080
+      - name: The game is live
+        run: |
+          test "${{ steps.first.outputs.version }}" = 1.0.0
+          test "${{ steps.first.outputs.url }}" = "https://fixture.play.localhost:8080/"
+          curl -fsS http://fixture.play.localhost:8080/ | grep 'fixture 1.0.0'
+          curl -fsS http://fixture.play.localhost:8080/tak/boot.js | grep boot.js
+
+      - name: A re-run of the same version fails by default
+        id: again
+        continue-on-error: true
+        uses: ./
+        with:
+          slug: fixture
+          token: ${{ env.TEST_TOKEN }}
+          url: http://play.localhost:8080
+      - run: test "${{ steps.again.outcome }}" = failure
+
+      - name: ...and passes with skip-existing
+        uses: ./
+        with:
+          slug: fixture
+          token: ${{ env.TEST_TOKEN }}
+          url: http://play.localhost:8080
+          skip-existing: "true"
+
+      - name: A wrong token fails
+        id: wrong
+        continue-on-error: true
+        uses: ./
+        with:
+          slug: fixture
+          token: wrong
+          url: http://play.localhost:8080
+      - run: test "${{ steps.wrong.outcome }}" = failure
+
+      - name: An empty token fails before any request
+        id: empty
+        continue-on-error: true
+        uses: ./
+        with:
+          slug: fixture
+          token: ""
+          url: http://play.localhost:8080
+      - run: test "${{ steps.empty.outcome }}" = failure
+
+      - run: python test/make_bundle.py 1.1.0
+      - name: activate false stores without going live
+        uses: ./
+        with:
+          slug: fixture
+          token: ${{ env.TEST_TOKEN }}
+          url: http://play.localhost:8080
+          activate: "false"
+      - run: curl -fsS http://fixture.play.localhost:8080/web/version.txt | grep -x 1.0.0
+
+      - if: always()
+        run: cat "$RUNNER_TEMP/arcade.log"
