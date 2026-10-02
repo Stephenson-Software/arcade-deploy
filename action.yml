@@ -19,7 +19,7 @@ inputs:
     description: Path to the built bundle.
     default: web/game.zip
   site-dir:
-    description: For a `kind: static` game, the directory to upload as the whole site (it must hold index.html). index and game-zip are ignored when this is set.
+    description: "For a static-kind game, the directory to upload as the whole site (it must hold index.html). index and game-zip are ignored when this is set."
     default: ""
   version-file:
     description: Path to version.txt. Its contents are the version deployed.
