@@ -3,9 +3,10 @@
 A GitHub Action that uploads a game's browser bundle to [arcade](https://github.com/Stephenson-Software/arcade),
 the shared host for browser games at `<slug>.play.danielstephenson.dev` (Stephenson-Software RFC 0006).
 
-It tars the game's `index.html`, `game.zip` and `version.txt` and `PUT`s them to arcade's API with
-the game's token. The version deployed is whatever `version.txt` says, and arcade refuses a
-`version.txt` that disagrees with it. Any non-2xx response fails the step with the server's reason.
+It tars the game's `index.html`, `game.zip` and `version.txt` (or, with `site-dir`, a whole static
+site) and `PUT`s them to arcade's API with the game's token. The version deployed is whatever
+`version.txt` says, and arcade refuses a `version.txt` that disagrees with it. Any non-2xx response
+fails the step with the server's reason, except a 409 when `skip-existing` is `true`.
 
 ## Use
 
@@ -80,9 +81,9 @@ ARCADE_SLUG=tidewater ARCADE_TOKEN="$(cat token.txt)" ./deploy.sh
 
 ## Tests
 
-CI starts a real arcade from its repository on `play.localhost` and deploys through the action. It
-covers a first deploy, the game being served, a re-run failing, `skip-existing`, a wrong token, an
-empty token, and `activate: false`.
+CI starts a real arcade from a pinned release on `play.localhost` and deploys through the action.
+It covers a first deploy, the game being served, a re-run failing, `skip-existing`, a wrong token,
+an empty token, `activate: false`, and a static site uploaded with `site-dir`.
 
 ## License
 
