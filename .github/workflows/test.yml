@@ -99,7 +99,7 @@ jobs:
           token: ${{ env.TEST_TOKEN }}
           url: http://play.localhost:8080
       - run: test "${{ steps.noslug.outcome }}" = failure
-      - name: ...with an ::error:: annotation
+      - name: "...with an ::error:: annotation"
         run: |
           if ARCADE_SLUG= ARCADE_TOKEN=x ./deploy.sh 2> "$RUNNER_TEMP/noslug.err"; then exit 1; fi
           grep -q '^::error::arcade-deploy: slug is empty' "$RUNNER_TEMP/noslug.err"
