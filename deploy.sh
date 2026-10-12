@@ -5,7 +5,7 @@ set -euo pipefail
 
 fail() { echo "::error::arcade-deploy: $*" >&2; exit 1; }
 
-: "${ARCADE_SLUG:?slug is required}"
+[ -n "${ARCADE_SLUG:-}" ] || fail "slug is empty - set the slug input to the game's slug in games.yaml"
 [ -n "${ARCADE_TOKEN:-}" ] || fail "token is empty - is the ARCADE_TOKEN secret set on this repository?"
 ARCADE_INDEX=${ARCADE_INDEX:-web/index.html}
 ARCADE_GAME_ZIP=${ARCADE_GAME_ZIP:-web/game.zip}
