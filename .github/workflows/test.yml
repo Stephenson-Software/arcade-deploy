@@ -111,8 +111,8 @@ jobs:
           expect_error() {  # <expected message> <ARCADE_*=...>...
             local want=$1; shift
             if env ARCADE_SLUG=fixture ARCADE_TOKEN=x ARCADE_URL=http://127.0.0.1:1 "$@" ./deploy.sh 2> "$RUNNER_TEMP/bad.err"; then exit 1; fi
-            cat "$RUNNER_TEMP/bad.err"
-            grep -qxF "::error::arcade-deploy: $want" "$RUNNER_TEMP/bad.err"
+            grep -qxF "::error::arcade-deploy: $want" "$RUNNER_TEMP/bad.err" \
+              || { sed 's/^::/: :/' "$RUNNER_TEMP/bad.err"; exit 1; }
           }
           echo '1.0/../x' > bad-version.txt
           mkdir -p empty-site
