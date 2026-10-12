@@ -104,6 +104,24 @@ jobs:
           if ARCADE_SLUG= ARCADE_TOKEN=x ./deploy.sh 2> "$RUNNER_TEMP/noslug.err"; then exit 1; fi
           grep -q '^::error::arcade-deploy: slug is empty' "$RUNNER_TEMP/noslug.err"
 
+      - name: "Bad inputs fail before any request, each with its own ::error::"
+        run: |
+          # Nothing listens on port 1, so a check that let a bad input through
+          # would fail with "could not reach" instead of the expected message.
+          expect_error() {  # <expected message> <ARCADE_*=...>...
+            local want=$1; shift
+            if env ARCADE_SLUG=fixture ARCADE_TOKEN=x ARCADE_URL=http://127.0.0.1:1 "$@" ./deploy.sh 2> "$RUNNER_TEMP/bad.err"; then exit 1; fi
+            cat "$RUNNER_TEMP/bad.err"
+            grep -qxF "::error::arcade-deploy: $want" "$RUNNER_TEMP/bad.err"
+          }
+          echo '1.0/../x' > bad-version.txt
+          mkdir -p empty-site
+          expect_error "slug 'Bad_Slug' is not a valid slug" ARCADE_SLUG=Bad_Slug
+          expect_error "version '1.0/../x' from bad-version.txt is not a valid version" ARCADE_VERSION_FILE=bad-version.txt
+          expect_error "web/missing.zip does not exist (did the build step run?)" ARCADE_GAME_ZIP=web/missing.zip
+          expect_error "empty-site/index.html does not exist (did the build step run?)" ARCADE_SITE_DIR=empty-site
+          expect_error "could not reach http://127.0.0.1:1"
+
       - run: python test/make_bundle.py 1.1.0
       - name: activate false stores without going live
         uses: ./

@@ -83,7 +83,9 @@ ARCADE_SLUG=tidewater ARCADE_TOKEN="$(cat token.txt)" ./deploy.sh
 
 CI starts a real arcade from a pinned release on `play.localhost` and deploys through the action.
 It covers a first deploy, the game being served, a re-run failing, `skip-existing`, a wrong token,
-an empty token, an empty slug, `activate: false`, and a static site uploaded with `site-dir`.
+an empty token, an empty slug, an invalid slug or version, a missing bundle file, a `site-dir`
+without `index.html`, an unreachable `url`, `activate: false`, and a static site uploaded with
+`site-dir`.
 
 ## License
 
