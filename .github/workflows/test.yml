@@ -115,12 +115,25 @@ jobs:
               || { sed 's/^::/: :/' "$RUNNER_TEMP/bad.err"; exit 1; }
           }
           echo '1.0/../x' > bad-version.txt
-          mkdir -p empty-site
+          mkdir -p empty-site page-site
+          echo '<html></html>' > page-site/index.html
           expect_error "slug 'Bad_Slug' is not a valid slug" ARCADE_SLUG=Bad_Slug
           expect_error "version '1.0/../x' from bad-version.txt is not a valid version" ARCADE_VERSION_FILE=bad-version.txt
+          expect_error "web/missing.html does not exist (did the build step run?)" ARCADE_INDEX=web/missing.html
           expect_error "web/missing.zip does not exist (did the build step run?)" ARCADE_GAME_ZIP=web/missing.zip
+          expect_error "missing-version.txt does not exist (did the build step run?)" ARCADE_VERSION_FILE=missing-version.txt
           expect_error "empty-site/index.html does not exist (did the build step run?)" ARCADE_SITE_DIR=empty-site
+          expect_error "missing-version.txt does not exist" ARCADE_SITE_DIR=page-site ARCADE_VERSION_FILE=missing-version.txt
           expect_error "could not reach http://127.0.0.1:1"
+
+      - name: Any other non-2xx status fails with the status and the server's reason
+        run: |
+          # Python's http.server has no PUT handler, so it answers 501.
+          python -m http.server 8099 --bind 127.0.0.1 > /dev/null 2>&1 &
+          for i in $(seq 1 20); do curl -fsS -o /dev/null http://127.0.0.1:8099/ && break; sleep 1; done
+          if ARCADE_SLUG=fixture ARCADE_TOKEN=x ARCADE_URL=http://127.0.0.1:8099 ./deploy.sh 2> "$RUNNER_TEMP/status.err"; then exit 1; fi
+          grep -q '^::error::arcade-deploy: upload failed with HTTP 501: .*Unsupported method' "$RUNNER_TEMP/status.err" \
+            || { sed 's/^::/: :/' "$RUNNER_TEMP/status.err"; exit 1; }
 
       - run: python test/make_bundle.py 1.1.0
       - name: activate false stores without going live
