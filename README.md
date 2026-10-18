@@ -86,6 +86,8 @@ It covers a first deploy, the game being served, a re-run failing, `skip-existin
 an empty token, an empty slug, an invalid slug or version, a missing `index`, `game-zip` or
 `version-file` (with or without `site-dir`), a `site-dir` without `index.html`, an unreachable
 `url`, any other non-2xx status, `activate: false`, and a static site uploaded with `site-dir`.
+Every successful deploy, including a `skip-existing` one, is checked for its `version` and `url`
+outputs.
 
 ## License
 

@@ -63,12 +63,17 @@ jobs:
       - run: test "${{ steps.again.outcome }}" = failure
 
       - name: ...and passes with skip-existing
+        id: skip
         uses: ./
         with:
           slug: fixture
           token: ${{ env.TEST_TOKEN }}
           url: http://play.localhost:8080
           skip-existing: "true"
+      - name: "...still setting the outputs"
+        run: |
+          test "${{ steps.skip.outputs.version }}" = 1.0.0
+          test "${{ steps.skip.outputs.url }}" = "https://fixture.play.localhost:8080/"
 
       - name: A wrong token fails
         id: wrong
@@ -137,13 +142,17 @@ jobs:
 
       - run: python test/make_bundle.py 1.1.0
       - name: activate false stores without going live
+        id: stored
         uses: ./
         with:
           slug: fixture
           token: ${{ env.TEST_TOKEN }}
           url: http://play.localhost:8080
           activate: "false"
-      - run: curl -fsS http://fixture.play.localhost:8080/web/version.txt | grep -x 1.0.0
+      - run: |
+          test "${{ steps.stored.outputs.version }}" = 1.1.0
+          test "${{ steps.stored.outputs.url }}" = "https://fixture.play.localhost:8080/"
+          curl -fsS http://fixture.play.localhost:8080/web/version.txt | grep -x 1.0.0
 
       - name: Build a static site (any tree, as pygbag or Emscripten would emit)
         run: |
@@ -152,6 +161,7 @@ jobs:
           printf '\0asm' > site-build/pkg/game.wasm
           echo 2.0.0 > site-version.txt
       - name: Deploy a static site through the action
+        id: static
         uses: ./
         with:
           slug: site
@@ -161,6 +171,8 @@ jobs:
           version-file: site-version.txt
       - name: The site is served as files, without isolation headers
         run: |
+          test "${{ steps.static.outputs.version }}" = 2.0.0
+          test "${{ steps.static.outputs.url }}" = "https://site.play.localhost:8080/"
           curl -fsS http://site.play.localhost:8080/ | grep 'static site'
           test "$(curl -fsS -o /dev/null -w '%{content_type}' http://site.play.localhost:8080/pkg/game.wasm)" = application/wasm
           ! curl -fsSI http://site.play.localhost:8080/ | grep -i '^cross-origin-embedder-policy'
