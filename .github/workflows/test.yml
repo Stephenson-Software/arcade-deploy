@@ -84,6 +84,20 @@ jobs:
           token: wrong
           url: http://play.localhost:8080
       - run: test "${{ steps.wrong.outcome }}" = failure
+      - name: "Refused uploads say what to do, and skip-existing leaves a notice"
+        run: |
+          expect_refusal() {  # <expected ::error:: prefix> <ARCADE_*=...>...
+            local want=$1; shift
+            if env ARCADE_SLUG=fixture ARCADE_URL=http://play.localhost:8080 "$@" ./deploy.sh 2> "$RUNNER_TEMP/refused.err"; then exit 1; fi
+            grep -qF "::error::arcade-deploy: $want" "$RUNNER_TEMP/refused.err" \
+              || { sed 's/^::/: :/' "$RUNNER_TEMP/refused.err"; exit 1; }
+          }
+          echo 9.9.9 > unused-version.txt
+          expect_refusal "fixture 1.0.0 is already deployed and versions are immutable - bump version.txt, or set skip-existing: true for re-runs. Server said: " ARCADE_TOKEN="$TEST_TOKEN"
+          expect_refusal "the server refused the token for 'fixture' (40" ARCADE_TOKEN=wrong ARCADE_VERSION_FILE=unused-version.txt
+          grep -q 'Check the ARCADE_TOKEN secret and the token_sha256 in games.yaml' "$RUNNER_TEMP/refused.err"
+          ARCADE_SLUG=fixture ARCADE_TOKEN="$TEST_TOKEN" ARCADE_URL=http://play.localhost:8080 ARCADE_SKIP_EXISTING=true ./deploy.sh > "$RUNNER_TEMP/skip.out"
+          grep -qxF '::notice::fixture 1.0.0 is already deployed; skipping (skip-existing).' "$RUNNER_TEMP/skip.out"
 
       - name: An empty token fails before any request
         id: empty
