@@ -173,6 +173,8 @@ jobs:
           mkdir -p site-build/pkg
           echo '<html>static site</html>' > site-build/index.html
           printf '\0asm' > site-build/pkg/game.wasm
+          echo '<html>linked page</html>' > page.html
+          ln -s "$PWD/page.html" site-build/linked.html
           echo 2.0.0 > site-version.txt
       - name: Deploy a static site through the action
         id: static
@@ -180,7 +182,7 @@ jobs:
         with:
           slug: site
           token: ${{ env.TEST_TOKEN }}
-          url: http://play.localhost:8080
+          url: http://play.localhost:8080/
           site-dir: site-build
           version-file: site-version.txt
       - name: The site is served as files, without isolation headers
@@ -191,6 +193,7 @@ jobs:
           test "$(curl -fsS -o /dev/null -w '%{content_type}' http://site.play.localhost:8080/pkg/game.wasm)" = application/wasm
           ! curl -fsSI http://site.play.localhost:8080/ | grep -i '^cross-origin-embedder-policy'
           curl -fsS http://site.play.localhost:8080/version.txt | grep -x 2.0.0
+          curl -fsS http://site.play.localhost:8080/linked.html | grep 'linked page'
 
       - if: always()
         run: cat "$RUNNER_TEMP/arcade.log"
