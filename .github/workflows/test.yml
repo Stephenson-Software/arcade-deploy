@@ -15,15 +15,15 @@ jobs:
     env:
       TEST_TOKEN: ci-test-token-not-a-secret
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           repository: Stephenson-Software/arcade
           # A released arcade, not its main branch: this test is about the
           # action against a known server. Bump it with each arcade release.
           ref: v0.6.6
           path: arcade-server
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Start arcade on play.localhost
