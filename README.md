@@ -84,9 +84,11 @@ ARCADE_SLUG=tidewater ARCADE_TOKEN="$(cat token.txt)" ./deploy.sh
 CI starts a real arcade from a pinned release on `play.localhost` and deploys through the action.
 It covers a first deploy, the game being served, a re-run failing, `skip-existing`, a wrong token,
 an empty token, an empty slug, an invalid slug or version, a missing `index`, `game-zip` or
-`version-file` (with or without `site-dir`), a `site-dir` without `index.html`, an unreachable
-`url`, any other non-2xx status, `activate: false`, and a static site uploaded with `site-dir`
-(holding a symlinked file, through a `url` with a trailing slash).
+`version-file` (with or without `site-dir`), a `site-dir` without `index.html`, `site-dir`
+ignoring a missing `index` and `game-zip`, an unreachable `url`, any other non-2xx status,
+`activate: false`, the closing line saying whether a version was stored, made live or skipped, and
+a static site uploaded with `site-dir` (holding a symlinked file, through a `url` with a trailing
+slash).
 Every successful deploy, including a `skip-existing` one, is checked for its `version` and `url`
 outputs. The re-run and wrong-token failures are checked for an error saying what to do next, and
 a `skip-existing` re-run for its notice.

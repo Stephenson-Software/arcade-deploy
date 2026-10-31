@@ -144,6 +144,8 @@ jobs:
           expect_error "empty-site/index.html does not exist (did the build step run?)" ARCADE_SITE_DIR=empty-site
           expect_error "missing-version.txt does not exist" ARCADE_SITE_DIR=page-site ARCADE_VERSION_FILE=missing-version.txt
           expect_error "could not reach http://127.0.0.1:1"
+          # With site-dir set, a missing index or game-zip is not checked.
+          expect_error "could not reach http://127.0.0.1:1" ARCADE_SITE_DIR=page-site ARCADE_INDEX=web/missing.html ARCADE_GAME_ZIP=web/missing.zip
 
       - name: Any other non-2xx status fails with the status and the server's reason
         run: |
@@ -167,6 +169,21 @@ jobs:
           test "${{ steps.stored.outputs.version }}" = 1.1.0
           test "${{ steps.stored.outputs.url }}" = "https://fixture.play.localhost:8080/"
           curl -fsS http://fixture.play.localhost:8080/web/version.txt | grep -x 1.0.0
+
+      - name: The last line says whether the upload is stored, live or skipped
+        run: |
+          last_line() {  # <expected last line> <ARCADE_*=...>...
+            local want=$1; shift
+            env ARCADE_SLUG=fixture ARCADE_TOKEN="$TEST_TOKEN" ARCADE_URL=http://play.localhost:8080 \
+              ARCADE_VERSION_FILE=line-version.txt "$@" ./deploy.sh > "$RUNNER_TEMP/line.out"
+            test "$(tail -n 1 "$RUNNER_TEMP/line.out")" = "$want" || { cat "$RUNNER_TEMP/line.out"; exit 1; }
+          }
+          echo 1.2.0 > line-version.txt
+          last_line "Stored (not live) for https://fixture.play.localhost:8080/" ARCADE_ACTIVATE=false
+          echo 1.3.0 > line-version.txt
+          last_line "Live at https://fixture.play.localhost:8080/"
+          last_line "::notice::fixture 1.3.0 is already deployed; skipping (skip-existing)." ARCADE_SKIP_EXISTING=true
+          curl -fsS http://fixture.play.localhost:8080/web/version.txt | grep -x 1.3.0
 
       - name: Build a static site (any tree, as pygbag or Emscripten would emit)
         run: |
