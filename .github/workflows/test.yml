@@ -145,6 +145,7 @@ jobs:
           expect_error "missing-version.txt does not exist (did the build step run?)" ARCADE_VERSION_FILE=missing-version.txt
           expect_error "empty-site/index.html does not exist (did the build step run?)" ARCADE_SITE_DIR=empty-site
           expect_error "missing-version.txt does not exist" ARCADE_SITE_DIR=page-site ARCADE_VERSION_FILE=missing-version.txt
+          expect_error "could not copy broken-site - does it hold a broken link?" ARCADE_SITE_DIR=broken-site
           expect_error "could not reach http://127.0.0.1:1"
           # With site-dir set, a missing index or game-zip is not checked.
           expect_error "could not reach http://127.0.0.1:1" ARCADE_SITE_DIR=page-site ARCADE_INDEX=web/missing.html ARCADE_GAME_ZIP=web/missing.zip
