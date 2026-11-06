@@ -134,8 +134,10 @@ jobs:
               || { sed 's/^::/: :/' "$RUNNER_TEMP/bad.err"; exit 1; }
           }
           echo '1.0/../x' > bad-version.txt
-          mkdir -p empty-site page-site
+          mkdir -p empty-site page-site broken-site
           echo '<html></html>' > page-site/index.html
+          echo '<html></html>' > broken-site/index.html
+          ln -s missing.html broken-site/dead.html
           expect_error "slug 'Bad_Slug' is not a valid slug" ARCADE_SLUG=Bad_Slug
           expect_error "version '1.0/../x' from bad-version.txt is not a valid version" ARCADE_VERSION_FILE=bad-version.txt
           expect_error "web/missing.html does not exist (did the build step run?)" ARCADE_INDEX=web/missing.html
@@ -143,6 +145,7 @@ jobs:
           expect_error "missing-version.txt does not exist (did the build step run?)" ARCADE_VERSION_FILE=missing-version.txt
           expect_error "empty-site/index.html does not exist (did the build step run?)" ARCADE_SITE_DIR=empty-site
           expect_error "missing-version.txt does not exist" ARCADE_SITE_DIR=page-site ARCADE_VERSION_FILE=missing-version.txt
+          expect_error "could not copy broken-site - does it hold a broken link?" ARCADE_SITE_DIR=broken-site
           expect_error "could not reach http://127.0.0.1:1"
           # With site-dir set, a missing index or game-zip is not checked.
           expect_error "could not reach http://127.0.0.1:1" ARCADE_SITE_DIR=page-site ARCADE_INDEX=web/missing.html ARCADE_GAME_ZIP=web/missing.zip
@@ -192,6 +195,7 @@ jobs:
           printf '\0asm' > site-build/pkg/game.wasm
           echo '<html>linked page</html>' > page.html
           ln -s "$PWD/page.html" site-build/linked.html
+          ln -s ../page.html site-build/relative.html
           echo 2.0.0 > site-version.txt
       - name: Deploy a static site through the action
         id: static
@@ -211,6 +215,7 @@ jobs:
           ! curl -fsSI http://site.play.localhost:8080/ | grep -i '^cross-origin-embedder-policy'
           curl -fsS http://site.play.localhost:8080/version.txt | grep -x 2.0.0
           curl -fsS http://site.play.localhost:8080/linked.html | grep 'linked page'
+          curl -fsS http://site.play.localhost:8080/relative.html | grep 'linked page'
 
       - if: always()
         run: cat "$RUNNER_TEMP/arcade.log"

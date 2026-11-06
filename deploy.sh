@@ -32,10 +32,10 @@ trap 'rm -rf "$work"' EXIT
 if [ -n "$ARCADE_SITE_DIR" ]; then
   # A static site: the whole directory, with version.txt written at its root.
   mkdir "$work/site"
-  cp -R "$ARCADE_SITE_DIR"/. "$work/site/"
-  printf '%s\n' "$version" > "$work/site/version.txt"
   # Links are refused by arcade; dereference them here rather than fail there.
-  tar -C "$work/site" --dereference -cf "$work/bundle.tar" .
+  cp -RL "$ARCADE_SITE_DIR"/. "$work/site/" || fail "could not copy $ARCADE_SITE_DIR - does it hold a broken link?"
+  printf '%s\n' "$version" > "$work/site/version.txt"
+  tar -C "$work/site" -cf "$work/bundle.tar" .
 else
   cp "$ARCADE_INDEX" "$work/index.html"
   cp "$ARCADE_GAME_ZIP" "$work/game.zip"
