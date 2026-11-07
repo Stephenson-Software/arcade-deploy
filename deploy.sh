@@ -14,18 +14,18 @@ ARCADE_URL=${ARCADE_URL:-https://play.danielstephenson.dev}
 ARCADE_ACTIVATE=${ARCADE_ACTIVATE:-true}
 ARCADE_SKIP_EXISTING=${ARCADE_SKIP_EXISTING:-false}
 
-[[ "$ARCADE_SLUG" =~ ^[a-z][a-z0-9-]{1,30}$ ]] || fail "slug '$ARCADE_SLUG' is not a valid slug"
+[[ "$ARCADE_SLUG" =~ ^[a-z][a-z0-9-]{1,30}$ ]] || fail "slug '$ARCADE_SLUG' is not a valid slug - use the slug from games.yaml: a lowercase letter, then 1-30 lowercase letters, digits or hyphens"
 ARCADE_SITE_DIR=${ARCADE_SITE_DIR:-}
 if [ -n "$ARCADE_SITE_DIR" ]; then
   [ -f "$ARCADE_SITE_DIR/index.html" ] || fail "$ARCADE_SITE_DIR/index.html does not exist (did the build step run?)"
-  [ -f "$ARCADE_VERSION_FILE" ] || fail "$ARCADE_VERSION_FILE does not exist"
+  [ -f "$ARCADE_VERSION_FILE" ] || fail "$ARCADE_VERSION_FILE does not exist (did the build step run?)"
 else
   for f in "$ARCADE_INDEX" "$ARCADE_GAME_ZIP" "$ARCADE_VERSION_FILE"; do
     [ -f "$f" ] || fail "$f does not exist (did the build step run?)"
   done
 fi
 version=$(tr -d '[:space:]' < "$ARCADE_VERSION_FILE")
-[[ "$version" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]{0,63}$ ]] || fail "version '$version' from $ARCADE_VERSION_FILE is not a valid version"
+[[ "$version" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]{0,63}$ ]] || fail "version '$version' from $ARCADE_VERSION_FILE is not a valid version - use a letter or digit, then up to 63 letters, digits or . _ + -"
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
