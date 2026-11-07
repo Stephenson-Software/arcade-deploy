@@ -21,7 +21,7 @@ jobs:
           repository: Stephenson-Software/arcade
           # A released arcade, not its main branch: this test is about the
           # action against a known server. Bump it with each arcade release.
-          ref: v0.6.6
+          ref: v0.6.8
           path: arcade-server
       - uses: actions/setup-python@v7
         with:
@@ -138,13 +138,13 @@ jobs:
           echo '<html></html>' > page-site/index.html
           echo '<html></html>' > broken-site/index.html
           ln -s missing.html broken-site/dead.html
-          expect_error "slug 'Bad_Slug' is not a valid slug" ARCADE_SLUG=Bad_Slug
-          expect_error "version '1.0/../x' from bad-version.txt is not a valid version" ARCADE_VERSION_FILE=bad-version.txt
+          expect_error "slug 'Bad_Slug' is not a valid slug - use the slug from games.yaml: a lowercase letter, then 1-30 lowercase letters, digits or hyphens" ARCADE_SLUG=Bad_Slug
+          expect_error "version '1.0/../x' from bad-version.txt is not a valid version - use a letter or digit, then up to 63 letters, digits or . _ + -" ARCADE_VERSION_FILE=bad-version.txt
           expect_error "web/missing.html does not exist (did the build step run?)" ARCADE_INDEX=web/missing.html
           expect_error "web/missing.zip does not exist (did the build step run?)" ARCADE_GAME_ZIP=web/missing.zip
           expect_error "missing-version.txt does not exist (did the build step run?)" ARCADE_VERSION_FILE=missing-version.txt
           expect_error "empty-site/index.html does not exist (did the build step run?)" ARCADE_SITE_DIR=empty-site
-          expect_error "missing-version.txt does not exist" ARCADE_SITE_DIR=page-site ARCADE_VERSION_FILE=missing-version.txt
+          expect_error "missing-version.txt does not exist (did the build step run?)" ARCADE_SITE_DIR=page-site ARCADE_VERSION_FILE=missing-version.txt
           expect_error "could not copy broken-site - does it hold a broken link?" ARCADE_SITE_DIR=broken-site
           expect_error "could not reach http://127.0.0.1:1"
           # With site-dir set, a missing index or game-zip is not checked.
