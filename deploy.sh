@@ -54,7 +54,7 @@ echo "Uploading $ARCADE_SLUG $version ($(wc -c < "$work/bundle.tar") bytes) to $
 skipped=false
 status=$(curl -sS --connect-timeout 20 -o "$work/response" -w '%{http_code}' \
   -X PUT -H @"$work/auth" -H 'Content-Type: application/x-tar' \
-  --data-binary @"$work/bundle.tar" "$endpoint") || fail "could not reach $ARCADE_URL"
+  --data-binary @"$work/bundle.tar" "$endpoint") || fail "could not reach $ARCADE_URL - check the url input, and that arcade is up"
 body=$(tr -s '\n ' ' ' < "$work/response")
 
 case "$status" in
