@@ -93,9 +93,9 @@ skipped, and a static site uploaded with `site-dir` (holding absolute and relati
 file outside it, through a `url` with a trailing slash).
 Every successful deploy, including a `skip-existing` one, is checked for its `version` and `url`
 outputs. The re-run and wrong-token failures are checked for an error saying what to do next, and
-a `skip-existing` re-run for its notice. Each bad input, the broken link and the unreachable `url`
-are checked for their exact error, and the other non-2xx status for the status and the server's
-reason.
+a `skip-existing` re-run for its notice. The invalid slug and version, each missing file, the broken
+link and the unreachable `url` are checked for their exact error, and the other non-2xx status for
+the status and the server's reason.
 
 ## License
 
