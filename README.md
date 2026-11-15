@@ -64,7 +64,8 @@ A broken link fails the step.
 | `activate` | `true` | `false` stores the version without making it live (promote later with arcade's `POST /api/games/<slug>/current`) |
 | `skip-existing` | `false` | treat "already deployed" (409) as success, for re-run jobs |
 
-Outputs: `version` and `url`.
+Outputs: `version` and `url`. `url` is `https://<slug>.<rest>/`, where `<rest>` is the `url`
+input without its `http://` or `https://` and trailing slash, so it is `https` either way.
 
 Versions are immutable. Re-running a deploy of the same version fails unless `skip-existing` is
 `true`, so a changed game needs a new `version.txt`.
@@ -92,7 +93,9 @@ skipped, and a static site uploaded with `site-dir` (holding absolute and relati
 file outside it, through a `url` with a trailing slash).
 Every successful deploy, including a `skip-existing` one, is checked for its `version` and `url`
 outputs. The re-run and wrong-token failures are checked for an error saying what to do next, and
-a `skip-existing` re-run for its notice.
+a `skip-existing` re-run for its notice. The invalid slug and version, each missing file, the broken
+link and the unreachable `url` are checked for their exact error, and the other non-2xx status for
+the status and the server's reason.
 
 ## License
 
