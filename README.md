@@ -5,8 +5,9 @@ the shared host for browser games at `<slug>.play.danielstephenson.dev` (Stephen
 
 It tars the game's `index.html`, `game.zip` and `version.txt` (or, with `site-dir`, a whole static
 site) and `PUT`s them to arcade's API with the game's token. The version deployed is whatever
-`version.txt` says, and arcade refuses a `version.txt` that disagrees with it. Any non-2xx response
-fails the step with the server's reason, except a 409 when `skip-existing` is `true`.
+`version.txt` says, and arcade refuses a `version.txt` that disagrees with it. Only a `201 Created`
+counts as success: any other response fails the step with the status and the server's reason,
+except a 409 when `skip-existing` is `true`.
 
 ## Use
 
